@@ -4,16 +4,15 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <algorithm>
 
-
-// #include <SFML/Graphics/CircleShape.hpp>
 #include <SFML/Graphics/RectangleShape.hpp>
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/System/Clock.hpp>
 #include <SFML/Window/Event.hpp>
 
-constexpr unsigned int pixelcountx = 5;
-constexpr unsigned int pixelcounty = 5;
+unsigned int pixelcountx = 10;
+unsigned int pixelcounty = 10;
 
 typedef struct simpleColor{
     bool r = false, g = false, b = false; 
@@ -27,7 +26,7 @@ void drawScalePixel(sf::RectangleShape& shape, sf::RenderWindow& window, sf::Vec
     window.draw(shape);
 }
 
-void applyValuesFromFile(const char* filename, std::vector<std::vector<int>>& pixelarr){
+void applyValuesFromFile(const char* filename, std::vector<std::vector<simpleColor>>& pixelarr){
     std::ifstream file;
     file.open(filename, std::ios::in);
     if(!file){
@@ -35,14 +34,51 @@ void applyValuesFromFile(const char* filename, std::vector<std::vector<int>>& pi
         exit(EXIT_FAILURE);
     }
 
-    int Yindex = 0;
     std::string linestring;
+
+    if(file.eof()){
+        std::cout << "Wrong format\n";
+        exit(EXIT_FAILURE);
+    }
+
+    std::getline(file, linestring);
+    if(linestring != "P3"){
+        std::cout << "Wrong format\n";
+        exit(EXIT_FAILURE);
+    }
+
+    if(file.eof()){
+        std::cout << "Wrong format\n";
+        exit(EXIT_FAILURE);
+    }
+    std::getline(file, linestring);
+
+    pixelcountx = std::atoi(linestring.substr(0, linestring.find(' ')).c_str()); 
+    pixelcounty = std::atoi(linestring.substr(linestring.find(' ')).c_str()); 
+    
+    if(file.eof()){
+        std::cout << "Wrong format\n";
+        exit(EXIT_FAILURE);
+    }
+    std::getline(file, linestring);
+
+    int Yindex = 0;
+    
+    std::string colorstring;
     while(!file.eof()){
         std::getline(file, linestring);
         linestring.erase(std::remove(linestring.begin(), linestring.end(), ' '), linestring.end()); //remove whitespaces
         for(int i = 0; i < pixelcountx; ++i){
-            pixelarr[Yindex][i] = linestring[i];
+            if(i * 3 + 3 > linestring.size()){
+                break;
+            }
+            colorstring = linestring.substr(i * 3, 3);
+            std::cout << colorstring << ' ';
+            pixelarr[Yindex][i].r = colorstring[0] == '1';
+            pixelarr[Yindex][i].g = colorstring[1] == '1';
+            pixelarr[Yindex][i].b = colorstring[2] == '1';
         }
+        std::cout << '\n';
         ++Yindex;
     }
     std::cout << "reloaded\n";
@@ -54,11 +90,11 @@ int main(int argc, char* argv[]){
     window.setFramerateLimit(60);
     ImGui::SFML::Init(window);
 
-    
-
     // IMPORTANT first y, then x
-    std::vector<std::vector<int>> pixelarr(pixelcounty , std::vector<int> (pixelcountx, 0)); // two dimensional vector
+    std::vector<std::vector<simpleColor>> pixelarr(pixelcounty , std::vector<simpleColor> (pixelcountx)); // two dimensional vector
     applyValuesFromFile("test.txt", pixelarr);    
+
+    sf::Color pixelcol = sf::Color::White;
 
     sf::RectangleShape shape{sf::Vector2f(100, 100)};
     shape.setPosition(100, 100);
@@ -88,15 +124,20 @@ int main(int argc, char* argv[]){
         window.clear();
         for(int y = 0; y < pixelarr.size(); y++){
             for(int x = 0; x < pixelarr[0].size(); x++){
-                drawScalePixel(shape, window, sf::Vector2i(pixelcountx, pixelcounty), sf::Vector2i(x, y), pixelarr[y][x] == '1' ? sf::Color::Blue : sf::Color::White);
+                pixelcol = sf::Color(pixelarr[y][x].r * 255, pixelarr[y][x].g * 255, pixelarr[y][x].b * 255, 255);
+                drawScalePixel(shape, window, sf::Vector2i(pixelcountx, pixelcounty), sf::Vector2i(x, y), pixelcol);
             }
         }
+
+        ImGui::Begin("info");
+            ImGui::Text("width: %u height: %u", pixelcountx, pixelcounty);
+        ImGui::End();
+
         
 
         ImGui::SFML::Render(window);
         window.display();
     }
-
     ImGui::SFML::Shutdown();
 
     return EXIT_SUCCESS;
