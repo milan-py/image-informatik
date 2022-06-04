@@ -1,0 +1,5 @@
+make.exe --dry-run --keep-going --print-directory
+make: Entering directory 'c:/Users/milan/Desktop/graphics/imgui-sfml-template'
+g++ main.o imgui_draw.o imgui_widgets.o imgui.o imgui_tables.o imgui-SFML.o imgui_demo.o -o bin\main.exe -lsfml-system -lsfml-window -lsfml-graphics -lsfml-audio -lsfml-network -lopengl32 
+make: Leaving directory 'c:/Users/milan/Desktop/graphics/imgui-sfml-template'
+ 
