@@ -48,7 +48,6 @@ std::string readHiddenMsg(const char* filename){
 
 void writeHiddenMsg(const char* filename, std::string msg, unsigned int pixelWidth){
     std::ofstream file;
-    std::cout << "Here\n";
     unsigned int pixelHeight = msg.length()/(pixelWidth*(static_cast<float>(3)/8)) + 1;
 
     file.open(filename, std::ios::out);
@@ -61,13 +60,11 @@ void writeHiddenMsg(const char* filename, std::string msg, unsigned int pixelWid
     std::string bitstring;
 
     file << "P3\n";
-    file << "1\n";
     file << pixelWidth << ' ' << pixelHeight << '\n';
+    file << "1\n";
     for(char& i: msg){
         bitstring += std::bitset<8>(i).to_string();
     }
-
-    std::cout << bitstring << '\n';
 
     std::string tempstring;
     for(int y = 0; y < pixelHeight; ++y){
@@ -90,10 +87,4 @@ void writeHiddenMsg(const char* filename, std::string msg, unsigned int pixelWid
         }
         file << '\n';
     }
-}
-
-
-int main(){ 
-    writeHiddenMsg("writefile.txt", "Hello", 4);
-    return EXIT_SUCCESS;
 }

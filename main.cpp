@@ -11,6 +11,8 @@
 #include <SFML/System/Clock.hpp>
 #include <SFML/Window/Event.hpp>
 
+#include "hidden.hpp"
+
 unsigned int pixelcountx = 10;
 unsigned int pixelcounty = 10;
 
@@ -73,12 +75,10 @@ void applyValuesFromFile(const char* filename, std::vector<std::vector<simpleCol
                 break;
             }
             colorstring = linestring.substr(i * 3, 3);
-            std::cout << colorstring << ' ';
             pixelarr[Yindex][i].r = colorstring[0] == '1';
             pixelarr[Yindex][i].g = colorstring[1] == '1';
             pixelarr[Yindex][i].b = colorstring[2] == '1';
         }
-        std::cout << '\n';
         ++Yindex;
     }
     std::cout << "reloaded\n";
@@ -86,13 +86,20 @@ void applyValuesFromFile(const char* filename, std::vector<std::vector<simpleCol
 }
 
 int main(int argc, char* argv[]){
+    if(argc < 2){
+        std::cout << "not enough arguments\nExpected: ./displayer <filename>\n";
+        return EXIT_FAILURE;
+    }
+
+
     sf::RenderWindow window(sf::VideoMode(640, 480), "image");
     window.setFramerateLimit(60);
     ImGui::SFML::Init(window);
 
     // IMPORTANT first y, then x
     std::vector<std::vector<simpleColor>> pixelarr(pixelcounty , std::vector<simpleColor> (pixelcountx)); // two dimensional vector
-    applyValuesFromFile("test.txt", pixelarr);    
+    applyValuesFromFile(argv[1], pixelarr);   
+    std::string hiddenText = readHiddenMsg(argv[1]);; 
 
     sf::Color pixelcol = sf::Color::White;
 
@@ -110,7 +117,8 @@ int main(int argc, char* argv[]){
             }
             if(event.type == sf::Event::KeyPressed and event.key.code == sf::Keyboard::Key::F5){
                 std::cout << "reloading...\n";
-                applyValuesFromFile("test.txt", pixelarr);
+                hiddenText = readHiddenMsg(argv[1]);
+                applyValuesFromFile(argv[1], pixelarr);
             }
 
             if(event.type == sf::Event::Resized){ // proper behaviour when the window is resized
@@ -131,6 +139,7 @@ int main(int argc, char* argv[]){
 
         ImGui::Begin("info");
             ImGui::Text("width: %u height: %u", pixelcountx, pixelcounty);
+            ImGui::Text("hidden text: %s", hiddenText.c_str());
         ImGui::End();
 
         
